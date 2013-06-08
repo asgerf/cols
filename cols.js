@@ -65,7 +65,7 @@ Cols.prototype.map = function(fn) {
     return this.then(function (data) {
         var result = []
         for (var i=0; i<data.length; i++) {
-            var x = fn(data[i])
+            var x = fn.call(data[i])
             if (x !== null) {
                 result.push(x)
             }
@@ -76,12 +76,17 @@ Cols.prototype.map = function(fn) {
 
 Cols.prototype.sort = function(fn) {
     // todo: sort by multiple criteria
+    var sgn = 1;
+    if (typeof fn === 'string' && fn[0] === '-') {
+        sgn = -1;
+        fn = fn.substring(1)
+    }
     fn = liftTV(fn)
     function compare(x,y) {
         x = fn.call(x)
         y = fn.call(y)
         if (x === y) return 0
-        else return x < y ? -1 : 1
+        else return x < y ? -sgn : sgn
     }
     return this.then(function (data) {
         var result = data.splice(0)
@@ -132,11 +137,11 @@ Cols.prototype.collapse = function(mapArg) {
 function liftPredicate(fn) {
     switch (typeof fn) {
         case 'function': return fn
-        case 'object': return function(obj) {
+        case 'object': return function() {
             for (var k in fn) {
                 if (!fn.hasOwnProperty(k))
                     continue
-                if (!fn[k].call(obj, obj[k]))
+                if (!fn[k].call(this, this[k]))
                     return false
             }
             return true
@@ -150,6 +155,39 @@ Cols.prototype.filter = function(fn) {
     fn = liftPredicate(fn)
     return this.map(function() {
         return fn.call(this) ? this : null
+    })
+}
+
+Cols.prototype.join = function(table) {
+    return this.then(function (data1) {
+        return table.then(function (data2) {
+            // TODO: use some kind of indexing for common properties
+            var result = [];
+            for (var i=0; i<data1.length; i++) {
+                var x = data1[i]
+                objLoop:
+                for (var j=0; j<data2.length; j++) {
+                    var y = data2[j]
+                    var obj = {}
+                    for (var k in x) {
+                        if (!x.hasOwnProperty(k))
+                            continue
+                        if (y.hasOwnProperty(k) && y[k] !== x[k])
+                            continue objLoop // discard object
+                        obj[k] = x[k]
+                    }
+                    for (var k in y) {
+                        if (!y.hasOwnProperty(k))
+                            continue
+                        if (x.hasOwnProperty(k))
+                            continue // handled above
+                        obj[k] = y[k]
+                    }
+                    result.push(obj)
+                }
+            }
+            return result
+        })
     })
 }
 
@@ -197,7 +235,8 @@ Cols.prototype.print = function() {
 
 // create function that applies pointwise to fields
 function pointwise_id(fn_obj) {
-    return function (obj) {
+    return function () {
+        var obj = this
         var result = {}
         for (var k in obj) {
             if (!obj.hasOwnProperty(k))
@@ -310,6 +349,11 @@ module.exports = {
     files: function(filenames,options) {
         return empty.files(filenames,options)
     },
+    data : function(data) {
+        return new Cols(function (resolve) {
+            resolve(data)
+        })
+    },
     id: id,
     sum: sum,
     product: product,
@@ -319,40 +363,6 @@ module.exports = {
     first: first,
     last: last,
     count: count,
-    constant: constant
-}
-
-// Entry point for testing
-// =======================
-if (require.main === module) {
-    var cols = empty;
-    var a = 
-    cols.file(process.argv[2])
-        .columns('bench', null, 'searchReplace', 'rename')
-        .map({
-            searchReplace: parseInt,
-            rename: parseInt
-        })
-        .map({
-            sum: function() { return this.searchReplace + this.rename; }
-        })
-        .sort('sum')
-        .group('bench', {
-            searchReplace: sum,
-            rename: sum,
-            sum: null,
-            count: function() { return this.bench.length }
-        })
-        .print('bench', 'searchReplace', 'rename', 'count')
-        .collapse({
-            bench: constant("TOTAL"),
-            searchReplace: sum,
-            rename: sum,
-            count: sum
-        })
-        .print('bench', 'searchReplace', 'rename', 'count')
-        .printErrors()
-
-    // a.print();
-    // a.map({sum:null}).print();
+    constant: constant,
+    lift: liftTV
 }
