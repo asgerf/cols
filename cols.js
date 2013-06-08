@@ -22,8 +22,7 @@ Cols.prototype.printErrors = function () {
 Cols.prototype.file = function(filename, options) {
     options = options || {}
     if (!options.encoding) options.encoding = 'utf8'
-    // TODO: append to `this`
-    return new Cols(function (resolve,reject) {
+    var promise = new Promise(function (resolve,reject) {
         fs.readFile(filename, options, function (e,data) {
             if (e) {
                 reject(e)
@@ -31,8 +30,14 @@ Cols.prototype.file = function(filename, options) {
                 // TODO: make this faster
                 resolve(data.toString().split(/\r?\n|\r/).filter(function (str) { return str !== ''})) 
             }
+        }
+    })
+    return this.then(function(data1) {
+        return promise.then(function(data2) {
+            if (data1.length === 0) return data2 // minor optimization
+            return data1.concat(data2)
         })
-    });
+    })
 };
 
 Cols.prototype.files = function(filenames, options) {
@@ -43,11 +48,21 @@ Cols.prototype.files = function(filenames, options) {
     return x
 }
 
-Cols.prototype.columns = function() { // todo: if last arg is object, use as options. separator can be regex
-    var names = arguments;
+Cols.prototype.columns = function() {
+    var sep = /\s+/
+    var names = []
+    for (var i=0; i<arguments.length; i++) {
+        var arg = arguments[i];
+        if (typeof arg === 'string' || arg === null)
+            names.push(arg)
+        else if (arg instanceof RegExp)
+            sep = arg
+        else
+            throw new Error("Invalid argument to columns: " + arg)
+    }
     return this.then(function (data) {
         return data.map(function (line) {
-            var items = line.split(/\s+/)
+            var items = line.split(sep)
             var obj = {}
             for (var i=0; i<names.length; i++) {
                 var name = names[i]
@@ -74,19 +89,26 @@ Cols.prototype.map = function(fn) {
     })
 };
 
-Cols.prototype.sort = function(fn) {
-    // todo: sort by multiple criteria
+function compareBy(fn, fallback) {
     var sgn = 1;
     if (typeof fn === 'string' && fn[0] === '-') {
         sgn = -1;
         fn = fn.substring(1)
     }
     fn = liftTV(fn)
-    function compare(x,y) {
+    return function(x,y) {
         x = fn.call(x)
         y = fn.call(y)
-        if (x === y) return 0
+        if (x === y) return fallback(x,y)
         else return x < y ? -sgn : sgn
+    }
+}
+
+Cols.prototype.sort = function(fn) {
+    if (arguments.length === 0) throw new Error("Sort by what? Pass one or more arguments.")
+    var compare = constant(0)
+    for (var i=arguments.length-1; i--; i>=0) {
+        compare = compareBy(arguments[i],compare)
     }
     return this.then(function (data) {
         var result = data.splice(0)
@@ -118,7 +140,7 @@ Cols.prototype.group = function(fn, mapArg) {
             for (var k in x) {
                 if (!x.hasOwnProperty(k))
                     continue
-                if (k in obj) {
+                if (obj.hasOwnProperty(k)) {
                     obj[k].push(x[k])
                 } else {
                     obj[k] = [x[k]]
