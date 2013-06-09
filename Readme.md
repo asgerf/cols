@@ -183,15 +183,59 @@ API
 
 ### `map(fn)`
 
-Applies `fn` to each item in the array and yields a new array with the returned values. Note that the item is passed as the *this* argument to `fn`.
+Applies `fn` to each row and yields a new array with the returned values. Note that the row is passed as the *this* argument to `fn`. If `fn` returns `null`, the row is discarded.
 
 ***Pointwise function conversion:*** 
 
-If `fn` is an object, say `{foo: F}`, it will apply `F` to column `foo` and leave the other columns intact. Any number of columns can be specified. `F` will take the original array item as *this* argument, and the first argument will be the value of its `foo` column, if it exists.
+If `fn` is an object, say `{foo: F}`, it will apply `F` to column `foo` and leave the other columns intact. Any number of columns can be specified. `F` will take the original row as *this* argument, and the first argument will be the value of its `foo` column, if it exists.
 
 It is possible to create new columns using a pointwise map, simply by specifying functions for columns that did not exist (see the example with *min*, *max*, and *average* above).
 
 A column can be deleted by passing `null` for that column instead of a function.
+
+### `group(fn, [mapFn])`
+
+Groups together rows for which `fn` evaluates to the same string value, then applies `map(mapFn)` in the result.
+
+The output has a single row for each group and has the same column names as the input. The value in each column is an array holding all the values that were grouped together.
+
+***Column-name function conversion:***
+
+If `fn` is a string, then `fn` is converted to the function that reads off the column of that name. Additionally, unless `mapFn` specifies otherwise, the column named by `fn` will be collapsed to a single value holding the value of that column, rather than an array of equivalent values.
+
+### `filter(fn)`
+
+Discards rows for which `fn` evaluates to a false-like value. Note that the row is passed as the *this* argument to `fn`.
+
+***Pointwise function conversion:*** 
+
+If `fn` is an object, say `{foo:F}`, it will apply `F` to column `foo` and discard the row if the result was false-like. `F` will take the original row as *this* argument, and the first argument will be the value of its `foo` column. If multiple columns are specified, *all* the columns must have their condition satisfied or the entire row gets discarded. 
+
+### `sort(key1, key2, ...)`
+
+Sorts the array based on one or more criteria.
+
+If a function is passed as key, it must act as a comparison function, returning -1, 0, or 1 if its first argument is less than, equal to, or greater than the second argument.
+
+If a string is passed as key, the value of that column is used for sorting. The name of a column may be preceeded by a minus (`-`) to reverse the ordering.
+
+### `then(onSuccess, [onFail])`
+
+The `then` method from [Promises/A+](http://promises-aplus.github.io/promises-spec/). The value passed to the `onSuccess` function is the array of values produced by this promise. The array can generally be assumed to be homogenous (i.e. all element have same type and structure).
+
+`then` is powerful enough to implement any of the other operations, but it generally takes a bit more code. Quite often, however, it's easier to solve a problem "by hand" using `then` than to figure out how to solve it using clever algebraic operators, and there is no shame in doing so.
+
+### `print(col1, col2, ...)`
+
+Prints the value of the given columns to the console, separated by spaces.
+
+If no column names are given, instead the entire array is printed using `console.dir`, which is mostly for debugging purposes.
+
+### `printErrors()`
+
+Responds to an error by printing it to `console.error`.
+
+It is a good idea to end *all* operation chains using a `printError()` call since exceptions will otherwise go unnoticed.
 
 ### TODO
 
