@@ -30,7 +30,7 @@ Cols.prototype.file = function(filename, options) {
                 // TODO: make this faster
                 resolve(data.toString().split(/\r?\n|\r/).filter(function (str) { return str !== ''})) 
             }
-        }
+        })
     })
     return this.then(function(data1) {
         return promise.then(function(data2) {
