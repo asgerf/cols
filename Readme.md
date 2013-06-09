@@ -143,7 +143,7 @@ Let's see how the output looks after `.group('browser')` (with only one argument
 				     score:[15724,     21898,      20150,    ...]},
  {browser: "safari", bench:["richards","deltablue","crypto", ...],
 				     lines:[539,       883,        1698,     ...],
-				     score:[10915,     7372,       16712,    ...]]
+				     score:[10915,     7372,       16712,    ...]}]
 ```
 
 After applying `.map({ score: cols.average })`, the `score` column has been collapsed to just a number:
@@ -154,7 +154,7 @@ After applying `.map({ score: cols.average })`, the `score` column has been coll
 				     score:17731.76923076923},
  {browser: "safari", bench:["richards","deltablue","crypto", ...],
 				     lines:[539,       883,        1698,     ...],
-				     score:11353.846153846154]
+				     score:11353.846153846154}]
 ```
 
 #### `.map({ score: function(x) { return x.toFixed(0) }	})`
@@ -167,7 +167,7 @@ This simply converts the scores to strings without all the decimals:
 				     score:"17731"},
  {browser: "safari", bench:["richards","deltablue","crypto", ...],
 				     lines:[539,       883,        1698,     ...],
-				     score:"11353"]
+				     score:"11353"}]
 ```
 
 #### `.print('browser', 'score')`
