@@ -213,7 +213,27 @@ Cols.prototype.join = function(table) {
     })
 }
 
+function parseFormatSpec(str) {
+    if (str[0] === '.') {
+        var digits = Number(str.substring(1))
+        return function() {
+            return this.toFixed(digits)
+        }
+    } else {
+        throw new Error("Unknown format string: " + str)
+    }
+}
+
 function parseColumnSpec(str) {
+    if (typeof str === 'string') {
+        var toks = str.split(/\s+/)
+        var fn = liftTV(toks[0])
+        if (typeof toks[1] === 'string' && toks[1][0] === '.') {
+            return function() {
+                return fn.call(this).to
+            }
+        }
+    }
     return liftTV(str)
     // var toks = str.split(/\s+/)
     // if (toks.length === 1) {
