@@ -225,6 +225,10 @@ If a function is passed as key, it will be given a row as `this` argument and mu
 
 If a string is passed as key, the value of that column is used for sorting. The name of a column may be preceeded by a minus (`-`) to reverse the ordering.
 
+### `join(table)`
+
+Perform a *natural join* of this table and the given table.
+
 ### `then(onSuccess, [onFail])`
 
 The `then` method from [Promises/A+](http://promises-aplus.github.io/promises-spec/). The value passed to the `onSuccess` function is the array of values produced by this promise. The array can generally be assumed to be homogenous (i.e. all element have same type and structure).
