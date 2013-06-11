@@ -39,7 +39,7 @@ Suppose we have these data in a file called `octane.txt`:
 We can quickly compute the average score per browser like this:
 
 ```javascript
-cols = require('cols')
+var cols = require('cols')
 
 cols.file('octane.txt')
 	.columns('browser', 'bench', 'lines', 'score')
@@ -96,8 +96,8 @@ This will print:
 	safari 3669 27342 11354
 
 
-How It Works
-============
+Example Walkthrough
+-------------------
 
 #### `cols.file('octane.txt')` 
 
