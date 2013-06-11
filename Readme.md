@@ -181,6 +181,12 @@ Prints the given columns to the console separated by spaces:
 API
 ===
 
+### `columns([regex], name1, name2, ...)`
+
+Splits each input row by whitespace and assigns the *N*-th substring to the *N*-th column name.
+
+Columns are split by the expression `/\s+/` by default. If any of the arguments is a regex, that regex is used for splitting instead.
+
 ### `map(fn)`
 
 Applies `fn` to each row and yields a new array with the returned values. Note that the row is passed as the *this* argument to `fn`. If `fn` returns `null`, the row is discarded.
@@ -215,7 +221,7 @@ If `fn` is an object, say `{foo:F}`, it will apply `F` to column `foo` and disca
 
 Sorts the array based on one or more criteria.
 
-If a function is passed as key, it must act as a comparison function, returning -1, 0, or 1 if its first argument is less than, equal to, or greater than the second argument.
+If a function is passed as key, it will be given a row as `this` argument and must return a string or number.
 
 If a string is passed as key, the value of that column is used for sorting. The name of a column may be preceeded by a minus (`-`) to reverse the ordering.
 
