@@ -104,10 +104,10 @@ function compareBy(fn, fallback) {
     }
 }
 
-Cols.prototype.sort = function(fn) {
+Cols.prototype.sort = function() {
     if (arguments.length === 0) throw new Error("Sort by what? Pass one or more arguments.")
     var compare = constant(0)
-    for (var i=arguments.length-1; i--; i>=0) {
+    for (var i=arguments.length-1; i>=0; i--) {
         compare = compareBy(arguments[i],compare)
     }
     return this.then(function (data) {
