@@ -3,6 +3,8 @@ cols
 
 Quick and simple data processing using relational algebra. `cols` is designed to replace tools like awk and perl for processing text-based data files.
 
+**Note:** `cols` is under development. There is no stable release.
+
 
 Example Usage
 =============
@@ -181,6 +183,36 @@ Prints the given columns to the console separated by spaces:
 API
 ===
 
+The module provides objects known as `Cols` objects. These objects are [promises](http://promises-aplus.github.io/promises-spec/) that yield an array. The elements of the array are called *rows*. If an element is an object, then its properties are also called *columns*.
+
+# Module Object
+
+The module object is not a promise nor a function.
+
+### `file(filename, [options])` `files(filenames, [options])`
+
+Creates a `Cols` object that yields all the lines in the given file(s). Options may be passed on to `fs.readFile`.
+
+Empty lines are discarded. Line separators may be LF, CR, or CRLF.
+
+### `data(array)`
+
+Creates a `Cols` object that yields the given array.
+
+### `lift(fn)`
+
+Lifts the `fn` value to a function using column-name conversion (see `group`) if it's a string, or pointwise conversion (see `map` operator) if it's an object.
+
+The returned function expects its input as `this` argument.
+
+### Other functions
+
+The module also provides the following functions: `sum`, `product`, `average`, `minimum`, `maximum`, `count`, `first`, `last`, `id`, `constant`. These functions take their input in the first argument (not `this` like some other functions).
+
+`id` is the identity function. `constant(x)` returns a function returning `x`. The other functions take an array and return the sum, product, average, etc as one might expect.
+
+# Cols Objects
+
 ### `columns([regex], name1, name2, ...)`
 
 Splits each input row by whitespace and assigns the *N*-th substring to the *N*-th column name.
@@ -201,7 +233,7 @@ A column can be deleted by passing `null` for that column instead of a function.
 
 ### `group(fn, [mapFn])`
 
-Groups together rows for which `fn` evaluates to the same string value, then applies `map(mapFn)` in the result.
+Groups together rows for which `fn` evaluates to the same string or number value, then applies `map(mapFn)` in the result.
 
 The output has a single row for each group and has the same column names as the input. The value in each column is an array holding all the values that were grouped together.
 
@@ -247,6 +279,3 @@ Responds to an error by printing it to `console.error`.
 
 It is a good idea to end *all* operation chains using a `printError()` call since exceptions will otherwise go unnoticed.
 
-### TODO
-
-document rest of API
