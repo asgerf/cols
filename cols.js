@@ -156,6 +156,14 @@ Cols.prototype.collapse = function(mapArg) {
     return this.group(constant(0), mapArg)
 }
 
+Cols.prototype.append = function(table) {
+    return this.then(function(data) {
+        return table.then(function(data2) {
+            return data.concat(data2)
+        })
+    })
+}
+
 function liftPredicate(fn) {
     switch (typeof fn) {
         case 'function': return fn
@@ -225,7 +233,14 @@ function parseFormatSpec(str) {
 }
 
 function parseColumnSpec(str) {
-    if (typeof str === 'string') {
+    return function() {
+        var value = this[str]
+        if (value instanceof Array)
+            return value.join(' ')
+        else
+            return value.toString()
+    }
+    /*if (typeof str === 'string') {
         var toks = str.split(/\s+/)
         var fn = liftTV(toks[0])
         if (typeof toks[1] === 'string' && toks[1][0] === '.') {
@@ -234,7 +249,7 @@ function parseColumnSpec(str) {
             }
         }
     }
-    return liftTV(str)
+    return liftTV(str)*/
     // var toks = str.split(/\s+/)
     // if (toks.length === 1) {
     //     return {fn: pluck(toks[0]), format:"%s "}
